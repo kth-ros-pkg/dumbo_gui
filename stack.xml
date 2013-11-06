@@ -1,9 +1,0 @@
-<stack>
-  <description brief="dumbo_gui">dumbo_gui</description>
-  <author>Maintained by Francisco Vina</author>
-  <license>BSD</license>  
-  <review status="unreviewed" notes=""/>
-  <url>http://ros.org/wiki/dumbo_gui</url>
-  <depend stack="ros" />  
-
-</stack>

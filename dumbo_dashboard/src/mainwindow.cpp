@@ -35,8 +35,8 @@
 
 #include <QtGui>
 #include <iostream>
-#include "../include/dumbo_dashboard/mainwindow.hpp"
-#include "../include/dumbo_dashboard/qnode.hpp"
+#include <dumbo_dashboard/mainwindow.hpp>
+#include <dumbo_dashboard/qnode.hpp>
 
 #ifndef PI
 #define PI (3.141592653589793)

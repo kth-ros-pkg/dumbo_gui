@@ -36,7 +36,7 @@
 #include <QtGui>
 #include <QtGui/QApplication>
 #include <ros/ros.h>
-#include "../include/dumbo_dashboard/mainwindow.hpp"
+#include <dumbo_dashboard/mainwindow.hpp>
 
 int main(int argc, char *argv[])
 {

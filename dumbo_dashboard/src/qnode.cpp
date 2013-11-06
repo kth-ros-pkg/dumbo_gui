@@ -51,7 +51,7 @@
 #include <std_msgs/String.h>
 
 #include <sstream>
-#include "../include/dumbo_dashboard/qnode.hpp"
+#include <dumbo_dashboard/qnode.hpp>
 
 
 /*****************************************************************************

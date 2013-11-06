@@ -1,0 +1,19 @@
+<package>
+  <name> dumbo_gui </name>
+  <version>1.0.0</version>
+  <description>
+    GUI for controlling CVAP's Dumbo robot
+  </description>
+  <maintainer email="fevb@kth.se">Francisco Vina</maintainer>
+  <license>BSD</license>
+
+  <url>http://ros.org/wiki/dumbo_gui</url>
+  <author>Francisco Vina</author>
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <run_depend>dumbo_dashboard</run_depend>
+
+  <export>
+    <metapackage/>
+  </export>
+</package>
