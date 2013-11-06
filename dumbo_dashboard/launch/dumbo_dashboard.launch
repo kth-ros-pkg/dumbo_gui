@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<launch>
+
+  <!-- launch robot -->
+  <!-- machine files -->
+  <include file="$(find dumbo_machine)/dumbo.machine" />
+
+  <!-- upload robot description -->
+  <include file="$(find dumbo_hardware_config)/common/upload_dumbo_v2.launch" />
+
+  <!-- start robot_state_publisher -->
+  <node pkg="robot_state_publisher" type="state_publisher" name="robot_state_publisher" />   
+
+
+  <!-- <include file="$(find dumbo_bringup)/robots/$(env ROBOT)/$(env ROBOT).launch"/> -->
+  <node name="left_arm_controller" pkg="dumbo_powercube_chain" type="dumbo_powercube_chain" machine="dumbo" cwd="node" respawn="false" output="screen" >
+    <rosparam command="load" file="$(find dumbo_hardware_config)/$(env ROBOT)/config/left_lwa.yaml"/>
+    <param name="arm_select" value="left" />
+  </node>
+
+  <node name="right_arm_controller" pkg="dumbo_powercube_chain" type="dumbo_powercube_chain" machine="dumbo" cwd="node" respawn="false" output="screen" >
+    <rosparam command="load" file="$(find dumbo_hardware_config)/$(env ROBOT)/config/right_lwa.yaml"/>
+    <param name="arm_select" value="right" />
+  </node>
+
+  <!-- Dumbo dashboard -->
+  <node pkg="dumbo_dashboard" type="dumbo_dashboard" name="dumbo_dashboard"/>
+
+</launch>

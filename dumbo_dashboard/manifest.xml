@@ -1,0 +1,27 @@
+<package>
+  <description brief="dumbo_dashboard">
+
+     dumbo_dashboard
+
+  </description>
+  <author>Francisco</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/dumbo_dashboard</url>
+  <depend package="cob_srvs"/>
+
+
+  <rosdep name="qt4"/>
+
+  <!-- rosbuild1 -->
+  <depend package="qt_build"/>
+  <depend package="roscpp"/>
+  
+  <rosbuild2>
+    <depend package="qt_build"/>
+    <depend package="roscpp"/>
+  </rosbuild2>
+  <depend package="brics_actuator"/>  
+<depend package="dumbo_srvs" />
+
+</package>
