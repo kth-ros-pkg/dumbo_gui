@@ -11,9 +11,11 @@ Installing
 ---------------------------------------------
 
 Install **Qt** libraries:
+
     sudo apt-get install libqt4-dev qt4-dev-tools
 
 It might also be useful to install the Qtcreator IDE:
+
     sudo apt-get install qtcreator
 
 Download the code from the `groovy` or `hydro` branch in the  github repository to your catkin workspace and compile using catkin:
