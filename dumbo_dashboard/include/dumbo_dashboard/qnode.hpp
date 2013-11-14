@@ -90,6 +90,11 @@ signals:
   void leftArmDisconnected();
   void rightArmDisconnected();
 
+  void left_ft_connected();
+  void right_ft_connected();
+  void left_ft_disconnected();
+  void right_ft_disconnected();
+
 private:
   int init_argc;
   char** init_argv;

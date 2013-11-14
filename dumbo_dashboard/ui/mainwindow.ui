@@ -219,6 +219,32 @@
      <string>Disconnect</string>
     </property>
    </widget>
+   <widget class="QLabel" name="label_l_ft">
+    <property name="geometry">
+     <rect>
+      <x>220</x>
+      <y>10</y>
+      <width>231</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Left arm F/T sensor disconnected</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_r_ft">
+    <property name="geometry">
+     <rect>
+      <x>220</x>
+      <y>40</y>
+      <width>231</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Right arm F/T sensor disconnected</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QToolBar" name="mainToolBar">
    <attribute name="toolBarArea">

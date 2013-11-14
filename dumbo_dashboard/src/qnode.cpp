@@ -282,6 +282,8 @@ void QNode::disconnect_robot()
     right_arm_FT_disconnectsrv_client.call(disconnect_srv);
     emit leftArmDisconnected();
     emit rightArmDisconnected();
+    emit left_ft_disconnected();
+    emit right_ft_disconnected();
 }
 
 
@@ -441,6 +443,7 @@ void QNode::connectFT()
 		if(left_arm_FT_connect_srv.response.success.data)
 		{
 			ROS_INFO("Successfully connected to left arm FT sensor...");
+            emit left_ft_connected();
 		}
 		else
 		{
@@ -464,6 +467,7 @@ void QNode::connectFT()
 		if(right_arm_FT_connect_srv.response.success.data)
 		{
 			ROS_INFO("Successfully connected to right arm FT sensor...");
+            emit right_ft_connected();
 		}
 		else
 		{

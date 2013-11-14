@@ -53,6 +53,10 @@ MainWindow::MainWindow(int argc, char** argv, QWidget *parent) :
   QObject::connect(&qnode, SIGNAL(rightArmConnected()), this, SLOT(display_rightarm_connected()));
   QObject::connect(&qnode, SIGNAL(leftArmDisconnected()), this, SLOT(display_leftarm_disconnected()));
   QObject::connect(&qnode, SIGNAL(rightArmDisconnected()), this, SLOT(display_rightarm_disconnected()));
+  QObject::connect(&qnode, SIGNAL(left_ft_connected()), this, SLOT(display_left_ft_connected()));
+  QObject::connect(&qnode, SIGNAL(right_ft_connected()), this, SLOT(display_right_ft_connected()));
+  QObject::connect(&qnode, SIGNAL(left_ft_disconnected()), this, SLOT(display_left_ft_disconnected()));
+  QObject::connect(&qnode, SIGNAL(right_ft_disconnected()), this, SLOT(display_right_ft_disconnected()));
 }
 
 MainWindow::~MainWindow()
@@ -96,7 +100,7 @@ void MainWindow::on_close_gripper_button_clicked(bool check)
 
 void MainWindow::display_leftarm_connected()
 {
-  ui->label_LA->setText("Left arm connected");
+  ui->label_LA->setText("right arm connected");
 }
 
 void MainWindow::display_rightarm_connected()
@@ -112,5 +116,26 @@ void MainWindow::display_leftarm_disconnected()
 void MainWindow::display_rightarm_disconnected()
 {
   ui->label_RA->setText("Right arm disconnected");
+}
+
+void MainWindow::display_left_ft_connected()
+{
+    ui->label_l_ft->setText("Left arm F/T sensor connected");
+}
+
+void MainWindow::display_right_ft_connected()
+{
+    ui->label_r_ft->setText("Right arm F/T sensor connected");
+}
+
+
+void MainWindow::display_left_ft_disconnected()
+{
+    ui->label_l_ft->setText("Left arm F/T sensor disconnected");
+}
+
+void MainWindow::display_right_ft_disconnected()
+{
+    ui->label_r_ft->setText("Right arm F/T sensor disconnected");
 }
 
