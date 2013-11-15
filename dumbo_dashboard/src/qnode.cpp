@@ -109,12 +109,12 @@ bool QNode::on_init()
 	pg70_pos_pub = n.advertise<brics_actuator::JointPositions>("/PG70_controller/command_pos", 1);
 
 	// subscribe to FT sensor init service
-	left_arm_FT_connectsrv_client = n.serviceClient<cob_srvs::Trigger>("/left_arm_FT_sensor/connect");
-    left_arm_FT_disconnectsrv_client = n.serviceClient<cob_srvs::Trigger>("/left_arm_FT_sensor/disconnect");
-	left_arm_FT_calibsrv_client = n.serviceClient<dumbo_srvs::CalibrateFT>("/left_arm_FT_sensor/calibrate");
-	right_arm_FT_connectsrv_client = n.serviceClient<cob_srvs::Trigger>("/right_arm_FT_sensor/connect");
-    right_arm_FT_disconnectsrv_client = n.serviceClient<cob_srvs::Trigger>("/right_arm_FT_sensor/disconnect");
-	right_arm_FT_calibsrv_client = n.serviceClient<dumbo_srvs::CalibrateFT>("/right_arm_FT_sensor/calibrate");
+    left_arm_ft_connectsrv_client = n.serviceClient<cob_srvs::Trigger>("/left_arm_ft_sensor/connect");
+    left_arm_ft_disconnectsrv_client = n.serviceClient<cob_srvs::Trigger>("/left_arm_ft_sensor/disconnect");
+    left_arm_ft_calibsrv_client = n.serviceClient<dumbo_srvs::CalibrateFT>("/left_arm_ft_sensor/calibrate");
+    right_arm_ft_connectsrv_client = n.serviceClient<cob_srvs::Trigger>("/right_arm_ft_sensor/connect");
+    right_arm_ft_disconnectsrv_client = n.serviceClient<cob_srvs::Trigger>("/right_arm_ft_sensor/disconnect");
+    right_arm_ft_calibsrv_client = n.serviceClient<dumbo_srvs::CalibrateFT>("/right_arm_ft_sensor/calibrate");
 
 
 	// subscribe to left gripper close service
@@ -278,8 +278,8 @@ void QNode::disconnect_robot()
     sdh_disconnectsrv_client.call(disconnect_srv);
     right_arm_disconnectsrv_client.call(disconnect_srv);
 
-    left_arm_FT_disconnectsrv_client.call(disconnect_srv);
-    right_arm_FT_disconnectsrv_client.call(disconnect_srv);
+    left_arm_ft_disconnectsrv_client.call(disconnect_srv);
+    right_arm_ft_disconnectsrv_client.call(disconnect_srv);
     emit leftArmDisconnected();
     emit rightArmDisconnected();
     emit left_ft_disconnected();
@@ -432,73 +432,52 @@ void QNode::closeGripper(double target_vel, double current_limit)
 void QNode::connectFT()
 {
 
-	cob_srvs::Trigger left_arm_FT_connect_srv;
-	while(!left_arm_FT_connectsrv_client.exists())
+    cob_srvs::Trigger left_arm_ft_connect_srv;
+    while(!left_arm_ft_connectsrv_client.exists())
 	{
-		ROS_INFO("Waiting for left arm FT connect service.");
+        ROS_INFO("Waiting for left arm F/T connect service.");
 		ros::Duration(1).sleep();
 	}
-	if(left_arm_FT_connectsrv_client.call(left_arm_FT_connect_srv))
+    if(left_arm_ft_connectsrv_client.call(left_arm_ft_connect_srv))
 	{
-		if(left_arm_FT_connect_srv.response.success.data)
+        if(left_arm_ft_connect_srv.response.success.data)
 		{
-			ROS_INFO("Successfully connected to left arm FT sensor...");
+            ROS_INFO("Successfully connected to left arm F/T sensor...");
             emit left_ft_connected();
 		}
 		else
 		{
-			ROS_ERROR("Error connecting to left arm FT sensor");
+            ROS_ERROR("Error connecting to left arm F/T sensor");
 		}
 	}
 
 	else
 	{
-		ROS_ERROR("Failed to call left arm FT sensor connect service");
+        ROS_ERROR("Failed to call left arm F/T sensor connect service");
 	}
 
-	cob_srvs::Trigger right_arm_FT_connect_srv;
-	while(!right_arm_FT_connectsrv_client.exists())
+    cob_srvs::Trigger right_arm_ft_connect_srv;
+    while(!right_arm_ft_connectsrv_client.exists())
 	{
-		ROS_INFO("Waiting for right arm FT connect service.");
+        ROS_INFO("Waiting for right arm F/T connect service.");
 		ros::Duration(1).sleep();
 	}
-	if(right_arm_FT_connectsrv_client.call(right_arm_FT_connect_srv))
+    if(right_arm_ft_connectsrv_client.call(right_arm_ft_connect_srv))
 	{
-		if(right_arm_FT_connect_srv.response.success.data)
+        if(right_arm_ft_connect_srv.response.success.data)
 		{
-			ROS_INFO("Successfully connected to right arm FT sensor...");
+            ROS_INFO("Successfully connected to right arm F/T sensor...");
             emit right_ft_connected();
 		}
 		else
 		{
-			ROS_ERROR("Error connecting to right arm FT sensor");
+            ROS_ERROR("Error connecting to right arm F/T sensor");
 		}
 	}
 
 	else
 	{
-		ROS_ERROR("Failed to call right arm FT sensor connect service");
+        ROS_ERROR("Failed to call right arm F/T sensor connect service");
 	}
-
-//
-//	dumbo_srvs::CalibrateFT left_arm_FT_calib_srv;
-//	left_arm_FT_calib_srv.request.num_measurements = 1000;
-//
-//	while(!left_arm_FT_calibsrv_client.exists())
-//	{
-//		ROS_INFO("Waiting for left arm FT sensor calib service");
-//		ros::Duration(1).sleep();
-//	}
-//
-//	if(left_arm_FT_calibsrv_client.call(left_arm_FT_calib_srv))
-//	{
-//		ROS_INFO("Successfully calibrated left arm FT sensor");
-//	}
-//
-//	else
-//	{
-//		ROS_ERROR("Error calibrating left arm FT sensor");
-//	}
-
 
 }

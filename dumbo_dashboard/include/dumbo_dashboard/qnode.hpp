@@ -122,13 +122,13 @@ private:
   ros::ServiceClient pg70_recoversrv_client;
   ros::ServiceClient sdh_recoversrv_client;
 
-  ros::ServiceClient left_arm_FT_connectsrv_client;
-  ros::ServiceClient left_arm_FT_disconnectsrv_client;
-  ros::ServiceClient left_arm_FT_calibsrv_client;
+  ros::ServiceClient left_arm_ft_connectsrv_client;
+  ros::ServiceClient left_arm_ft_disconnectsrv_client;
+  ros::ServiceClient left_arm_ft_calibsrv_client;
 
-  ros::ServiceClient right_arm_FT_connectsrv_client;
-  ros::ServiceClient right_arm_FT_disconnectsrv_client;
-  ros::ServiceClient right_arm_FT_calibsrv_client;
+  ros::ServiceClient right_arm_ft_connectsrv_client;
+  ros::ServiceClient right_arm_ft_disconnectsrv_client;
+  ros::ServiceClient right_arm_ft_calibsrv_client;
   
   ros::Publisher pg70_pos_pub;
   ros::ServiceClient pg70_close_srv_client;
