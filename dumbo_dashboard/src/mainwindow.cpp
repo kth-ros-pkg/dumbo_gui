@@ -100,7 +100,7 @@ void MainWindow::on_close_gripper_button_clicked(bool check)
 
 void MainWindow::display_leftarm_connected()
 {
-  ui->label_LA->setText("right arm connected");
+  ui->label_LA->setText("Left arm connected");
 }
 
 void MainWindow::display_rightarm_connected()
