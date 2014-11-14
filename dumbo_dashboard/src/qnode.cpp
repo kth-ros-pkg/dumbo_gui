@@ -395,8 +395,8 @@ void QNode::sendGripperPos(double pos)
 
   left_gripper_pos_command.positions[0].timeStamp = ros::Time::now();
   left_gripper_pos_command.positions[0].joint_uri = "left_arm_top_finger_joint";
-  left_gripper_pos_command.positions[0].unit = "mm";
-  left_gripper_pos_command.positions[0].value = pos;
+  left_gripper_pos_command.positions[0].unit = "m";
+  left_gripper_pos_command.positions[0].value = pos/1000.0;
 
   pg70_pos_pub.publish(left_gripper_pos_command);
 
