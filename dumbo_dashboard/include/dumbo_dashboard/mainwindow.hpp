@@ -69,6 +69,9 @@ public slots:
   void display_leftarm_disconnected();
   void display_rightarm_disconnected();
 
+  void display_pg70_connected();
+  void display_pg70_disconnected();
+
   void display_left_ft_connected();
   void display_right_ft_connected();
 
