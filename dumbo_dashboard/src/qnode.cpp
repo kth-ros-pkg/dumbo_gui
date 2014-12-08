@@ -145,7 +145,7 @@ void QNode::run() {
 void QNode::sendGripperPos(double pos)
 {
     control_msgs::GripperCommand pos_command_msg;
-    pos_command_msg.position = pos;
+    pos_command_msg.position = pos/1000.0;
 
     pg70_pos_pub_.publish(pos_command_msg);
 }
