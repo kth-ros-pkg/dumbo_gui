@@ -75,6 +75,16 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+void MainWindow::on_soft_connect_button_clicked(bool check)
+{
+    std_srvs::Empty srv;
+
+    if(!qnode.soft_connect_dumbo_client.call(srv))
+    {
+        ROS_ERROR("Dumbo dashboard: error (soft) connecting to Dumbo.");
+    }
+}
+
 void MainWindow::on_connect_button_clicked(bool check)
 {
     std_srvs::Empty srv;
@@ -101,7 +111,7 @@ void MainWindow::on_stop_button_clicked(bool check)
 
     if(!qnode.stop_dumbo_client.call(srv))
     {
-        ROS_ERROR("Dumbo dashboard; error stopping Dumbo.");
+        ROS_ERROR("Dumbo dashboard: error stopping Dumbo.");
     }
 }
 
@@ -123,6 +133,16 @@ void MainWindow::on_send_gripper_pos_button_clicked(bool check)
 void MainWindow::on_close_gripper_button_clicked(bool check)
 {
   qnode.sendGripperPos(0.0);
+}
+
+void MainWindow::on_recover_gripper_button_clicked(bool check)
+{
+    std_srvs::Empty srv;
+
+    if(!qnode.recover_pg70_client.call(srv))
+    {
+        ROS_ERROR("Dumbo dashboard: error recovering gripper");
+    }
 }
 
 

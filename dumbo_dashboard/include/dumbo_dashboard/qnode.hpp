@@ -64,6 +64,7 @@ class QNode : public QThread {
     Q_OBJECT
 public:
     // service clients for connecting/disconnecting stopping/recovering HW
+    ros::ServiceClient soft_connect_dumbo_client;
     ros::ServiceClient connect_dumbo_client;
     ros::ServiceClient disconnect_dumbo_client;
 
@@ -78,6 +79,7 @@ public:
 
     ros::ServiceClient connect_pg70_client;
     ros::ServiceClient disconnect_pg70_client;
+    ros::ServiceClient recover_pg70_client;
 
 
     QNode(int argc, char** argv );

@@ -79,6 +79,7 @@ bool QNode::on_init()
 	// Add your ros communications here.
 
     // service clients for connecting/disconnecting to Dumbo
+    soft_connect_dumbo_client = nh_.serviceClient<std_srvs::Empty>("/dumbo/soft_connect");
     connect_dumbo_client = nh_.serviceClient<std_srvs::Empty>("/dumbo/connect");
     disconnect_dumbo_client = nh_.serviceClient<std_srvs::Empty>("/dumbo/disconnect");
 
@@ -97,6 +98,7 @@ bool QNode::on_init()
     // service clients for connecting/disconnecting to PG70 parallel gripper
     connect_pg70_client = nh_.serviceClient<std_srvs::Empty>("/PG70_gripper/connect");
     disconnect_pg70_client = nh_.serviceClient<std_srvs::Empty>("/PG70_gripper/disconnect");
+    recover_pg70_client = nh_.serviceClient<std_srvs::Empty>("/PG70_gripper/recover");
 
     // advertise PG70 parallel gripper position command
     pg70_pos_pub_ = nh_.advertise<control_msgs::GripperCommand>("/PG70_gripper/pos_command", 1);

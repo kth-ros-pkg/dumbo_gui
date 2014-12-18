@@ -54,6 +54,7 @@ class MainWindow : public QMainWindow
 
 public slots:
 
+  void on_soft_connect_button_clicked(bool check);
   void on_connect_button_clicked(bool check);
   void on_disconnect_button_clicked(bool check);
   void on_stop_button_clicked(bool check);
@@ -61,6 +62,7 @@ public slots:
 
   void on_send_gripper_pos_button_clicked(bool check);
   void on_close_gripper_button_clicked(bool check);
+  void on_recover_gripper_button_clicked(bool check);
 
   // TODO: replace these displays with LEDs or something a bit nicer
   void display_leftarm_connected();
