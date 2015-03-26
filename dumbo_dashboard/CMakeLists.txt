@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(dumbo_dashboard)
 
-find_package(catkin REQUIRED COMPONENTS roscpp brics_actuator dumbo_srvs cob_srvs)
+find_package(catkin REQUIRED COMPONENTS roscpp brics_actuator std_srvs std_msgs control_msgs)
 
 find_package(Qt4 4.6 REQUIRED COMPONENTS QtCore QtGui)
 include(${QT_USE_FILE})
@@ -16,7 +16,7 @@ include_directories(include
 
 link_directories(${catkin_LIBRARY_DIRS})
 
-catkin_package(CATKIN_DEPENDS roscpp brics_actuator dumbo_srvs cob_srvs)
+catkin_package(CATKIN_DEPENDS roscpp brics_actuator std_srvs std_msgs control_msgs)
 
 set(dumbo_dashboard_SOURCES src/main.cpp src/qnode.cpp src/mainwindow.cpp)
 set(dumbo_dashboard_HEADERS include/dumbo_dashboard/qnode.hpp include/dumbo_dashboard/mainwindow.hpp)

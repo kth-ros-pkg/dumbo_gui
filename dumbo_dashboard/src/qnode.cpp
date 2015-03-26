@@ -52,6 +52,7 @@
 
 #include <sstream>
 #include <dumbo_dashboard/qnode.hpp>
+#include <control_msgs/GripperCommand.h>
 
 
 /*****************************************************************************
@@ -62,7 +63,7 @@ QNode::QNode(int argc, char** argv ) :
   init_argc(argc),
   init_argv(argv)
 {
-  n = ros::NodeHandle("~"); 
+  nh_ = ros::NodeHandle("~");
 }
 
 QNode::~QNode() {
@@ -77,48 +78,39 @@ bool QNode::on_init()
 {
 	// Add your ros communications here.
 
-	// subscribe to arm initialization services
-	left_arm_initsrv_client = n.serviceClient<cob_srvs::Trigger>("/left_arm_controller/init");
-	right_arm_initsrv_client = n.serviceClient<cob_srvs::Trigger>("/right_arm_controller/init");
+    // service clients for connecting/disconnecting to Dumbo
+    soft_connect_dumbo_client = nh_.serviceClient<std_srvs::Empty>("/dumbo/soft_connect");
+    connect_dumbo_client = nh_.serviceClient<std_srvs::Empty>("/dumbo/connect");
+    disconnect_dumbo_client = nh_.serviceClient<std_srvs::Empty>("/dumbo/disconnect");
 
-    // subscribe to disconnect services
-    left_arm_disconnectsrv_client = n.serviceClient<cob_srvs::Trigger>("/left_arm_controller/disconnect");
-    right_arm_disconnectsrv_client = n.serviceClient<cob_srvs::Trigger>("/right_arm_controller/disconnect");
+    // service clients for stopping/recovering Dumbo
+    stop_dumbo_client = nh_.serviceClient<std_srvs::Empty>("/dumbo/stop");
+    recover_dumbo_client = nh_.serviceClient<std_srvs::Empty>("/dumbo/recover");
 
-	// subscribe to PG70 parallel gripper initialization services
-	pg70_initsrv_client = n.serviceClient<cob_srvs::Trigger>("/PG70_controller/init");
-	sdh_initsrv_client = n.serviceClient<cob_srvs::Trigger>("/sdh_controller/init");
+    // service clients for connecting/disconnecting to left arm
+    connect_left_arm_client = nh_.serviceClient<std_srvs::Empty>("/left_arm/connect");
+    disconnect_left_arm_client = nh_.serviceClient<std_srvs::Empty>("/left_arm/disconnect");
 
-    // subscribe to PG70 parallel gripper disconnect services
-    pg70_disconnectsrv_client = n.serviceClient<cob_srvs::Trigger>("/PG70_controller/disconnect");
-    sdh_disconnectsrv_client = n.serviceClient<cob_srvs::Trigger>("/sdh_controller/shutdown");
+    // service clients for connecting/disconnecting to right arm
+    connect_right_arm_client = nh_.serviceClient<std_srvs::Empty>("/right_arm/connect");
+    disconnect_right_arm_client = nh_.serviceClient<std_srvs::Empty>("/right_arm/disconnect");
 
-	// subscribe to arm stop services
-	left_arm_stopsrv_client = n.serviceClient<cob_srvs::Trigger>("/left_arm_controller/stop_arm");
-	right_arm_stopsrv_client = n.serviceClient<cob_srvs::Trigger>("/right_arm_controller/stop_arm");
+    // service clients for connecting/disconnecting to PG70 parallel gripper
+    connect_pg70_client = nh_.serviceClient<std_srvs::Empty>("/PG70_gripper/connect");
+    disconnect_pg70_client = nh_.serviceClient<std_srvs::Empty>("/PG70_gripper/disconnect");
+    recover_pg70_client = nh_.serviceClient<std_srvs::Empty>("/PG70_gripper/recover");
 
-	// subscribe to arm recover services
-	left_arm_recoversrv_client = n.serviceClient<cob_srvs::Trigger>("/left_arm_controller/recover");
-	right_arm_recoversrv_client = n.serviceClient<cob_srvs::Trigger>("/right_arm_controller/recover");
+    // advertise PG70 parallel gripper position command
+    pg70_pos_pub_ = nh_.advertise<control_msgs::GripperCommand>("/PG70_gripper/pos_command", 1);
 
-	// subscribe to gripper recover services
-	pg70_recoversrv_client = n.serviceClient<cob_srvs::Trigger>("/PG70_controller/recover");
-	sdh_recoversrv_client = n.serviceClient<cob_srvs::Trigger>("/sdh_controller/recover");
+    left_arm_status_sub_ = nh_.subscribe("/left_arm/connected", 1,  &QNode::leftArmStatusCallback, this);
+    right_arm_status_sub_ = nh_.subscribe("/right_arm/connected", 1,  &QNode::rightArmStatusCallback, this);
 
-	// subscribe to gripper pos
-	pg70_pos_pub = n.advertise<brics_actuator::JointPositions>("/PG70_controller/command_pos", 1);
+    pg70_status_sub_ = nh_.subscribe("/PG70_gripper/connected", 1,  &QNode::pg70StatusCallback, this);
 
-	// subscribe to FT sensor init service
-    left_arm_ft_connectsrv_client = n.serviceClient<cob_srvs::Trigger>("/left_arm_ft_sensor/connect");
-    left_arm_ft_disconnectsrv_client = n.serviceClient<cob_srvs::Trigger>("/left_arm_ft_sensor/disconnect");
-    left_arm_ft_calibsrv_client = n.serviceClient<dumbo_srvs::CalibrateFT>("/left_arm_ft_sensor/calibrate");
-    right_arm_ft_connectsrv_client = n.serviceClient<cob_srvs::Trigger>("/right_arm_ft_sensor/connect");
-    right_arm_ft_disconnectsrv_client = n.serviceClient<cob_srvs::Trigger>("/right_arm_ft_sensor/disconnect");
-    right_arm_ft_calibsrv_client = n.serviceClient<dumbo_srvs::CalibrateFT>("/right_arm_ft_sensor/calibrate");
+    left_arm_ft_sensor_status_sub_ = nh_.subscribe("/left_arm_ft_sensor/connected", 1,  &QNode::leftArmFTSensorStatusCallback, this);
+    right_arm_ft_sensor_status_sub_= nh_.subscribe("/right_arm_ft_sensor/connected", 1,  &QNode::rightArmFTSensorStatusCallback, this);
 
-
-	// subscribe to left gripper close service
-	pg70_close_srv_client = n.serviceClient<dumbo_srvs::ClosePG70Gripper>("/PG70_controller/close_gripper");
 
 	start();
 	return true;
@@ -150,334 +142,78 @@ void QNode::run() {
 	emit rosShutdown(); // used to signal the gui for a shutdown (useful to roslaunch)
 }
 
-void QNode::initArms()
-{
-  cob_srvs::Trigger left_arm_init_srv;
 
-  while(!left_arm_initsrv_client.exists())
-  {
-	  ROS_INFO("Waiting for left arm init service");
-	  ros::Duration(1).sleep();
-  }
-
-  if(left_arm_initsrv_client.call(left_arm_init_srv))
-    {
-      if(left_arm_init_srv.response.success.data) 
-	{
-	  ROS_INFO("Successfully initialized left arm...");
-	  emit leftArmConnected();
-	}
-      else
-	{
-	  ROS_ERROR("Error initializing left arm");
-	}
-    }
-
-  else
-    {
-      ROS_ERROR("Failed to call left arm init service");
-    }
-
-
-  // open the PG70 gripper if the left arm connected correctly
-  if(left_arm_init_srv.response.success.data)
-  {
-	  cob_srvs::Trigger pg70_init_srv;
-
-//	  while(!pg70_initsrv_client.exists())
-//	  {
-//		  ROS_INFO("Waiting for PG70 init service");
-//		  ros::Duration(1).sleep();
-//	  }
-
-	  if(pg70_initsrv_client.call(pg70_init_srv))
-	  {
-		  if(pg70_init_srv.response.success.data)
-		  {
-			  ROS_INFO("Successfully initialized PG70 gripper...");
-			  //		  emit rightArmConnected(); todo fix for pg70
-		  }
-		  else
-		  {
-			  ROS_ERROR("Error initializing PG70 gripper");
-		  }
-	  }
-
-	  else
-	  {
-		  ROS_ERROR("Failed to call PG70 gripper init service");
-	  }
-  }
-
-
-  cob_srvs::Trigger right_arm_init_srv;
-
-  while(!right_arm_initsrv_client.exists())
-  {
-	  ROS_INFO("Waiting for right arm init service");
-	  ros::Duration(1).sleep();
-  }
-
-  if(right_arm_initsrv_client.call(right_arm_init_srv))
-  {
-	  if(right_arm_init_srv.response.success.data)
-	  {
-		  ROS_INFO("Successfully initialized right arm...");
-		  emit rightArmConnected();
-	  }
-	  else
-	  {
-		  ROS_ERROR("Error initializing right arm");
-	  }
-  }
-
-  else
-  {
-	  ROS_ERROR("Failed to call right arm init service");
-  }
-
-
-  if(right_arm_init_srv.response.success.data)
-  {
-	  cob_srvs::Trigger sdh_init_srv;
-
-//	  while(!sdh_initsrv_client.exists())
-//	  {
-//		  ROS_INFO("Waiting for SDH init service");
-//		  ros::Duration(1).sleep();
-//	  }
-
-	  if(sdh_initsrv_client.call(sdh_init_srv))
-	  {
-		  if(sdh_init_srv.response.success.data)
-		  {
-			  ROS_INFO("Successfully initialized SDH gripper...");
-			  //		  emit rightArmConnected(); todo fix for sdh
-		  }
-		  else
-		  {
-			  ROS_ERROR("Error initializing SDH gripper");
-		  }
-	  }
-
-	  else
-	  {
-		  ROS_ERROR("Failed to call SDH gripper init service");
-	  }
-  }
-
-
-}
-
-void QNode::disconnect_robot()
-{
-    cob_srvs::Trigger disconnect_srv;
-
-    pg70_disconnectsrv_client.call(disconnect_srv);
-    left_arm_disconnectsrv_client.call(disconnect_srv);
-    sdh_disconnectsrv_client.call(disconnect_srv);
-    right_arm_disconnectsrv_client.call(disconnect_srv);
-
-    left_arm_ft_disconnectsrv_client.call(disconnect_srv);
-    right_arm_ft_disconnectsrv_client.call(disconnect_srv);
-    emit leftArmDisconnected();
-    emit rightArmDisconnected();
-    emit left_ft_disconnected();
-    emit right_ft_disconnected();
-}
-
-
-void QNode::stopArms()
-{
-  cob_srvs::Trigger left_arm_stop_srv;
-  if(left_arm_stopsrv_client.call(left_arm_stop_srv))
-    {
-      if(left_arm_stop_srv.response.success.data) 
-	{
-	  ROS_INFO("Successfully stopped left arm...");
-	}
-      else
-	{
-	  ROS_ERROR("Error stopping left arm");
-	}
-    }
-
-  else
-    {
-      ROS_ERROR("Failed to call left arm stop service");
-    }
-
-
-  cob_srvs::Trigger right_arm_stop_srv;
-  if(right_arm_stopsrv_client.call(right_arm_stop_srv))
-    {
-      if(right_arm_stop_srv.response.success.data) 
-	{
-	  ROS_INFO("Successfully stopped right arm...");
-	}
-      else
-	{
-	  ROS_ERROR("Error stopping right arm");
-	}
-    }
-
-  else
-    {
-      ROS_ERROR("Failed to call right arm stop service");
-    }
-}
-
-
-
-void QNode::recoverArms()
-{
-  cob_srvs::Trigger left_arm_recover_srv;
-  if(left_arm_recoversrv_client.call(left_arm_recover_srv))
-    {
-      if(left_arm_recover_srv.response.success.data==true)
-	{
-	  ROS_INFO("Successfully recovered left arm...");
-	}
-      else
-	{
-	  ROS_ERROR("Error recovering left arm");
-	}
-    }
-
-  else
-    {
-      ROS_ERROR("Failed to call left arm recover service");
-    }
-
-  cob_srvs::Trigger pg70_recover_srv;
-  if(pg70_recoversrv_client.call(pg70_recover_srv))
-  {
-	  if(pg70_recover_srv.response.success.data==true)
-	  {
-		  ROS_INFO("Successfully recovered PG70 parallel gripper...");
-	  }
-	  else
-	  {
-		  ROS_ERROR("Error recovering PG70 parallel gripper");
-	  }
-  }
-
-  else
-  {
-	  ROS_ERROR("Failed to call PG70 parallel gripper recover service");
-  }
-
-
-  cob_srvs::Trigger right_arm_recover_srv;
-  if(right_arm_recoversrv_client.call(right_arm_recover_srv))
-    {
-      if(right_arm_recover_srv.response.success.data==true)
-	{
-	  ROS_INFO("Successfully recovered right arm...");
-	}
-      else
-	{
-	  ROS_ERROR("Error recovering right arm");
-	}
-    }
-
-  else
-    {
-      ROS_ERROR("Failed to call right arm recover service");
-    }
-}
 
 void QNode::sendGripperPos(double pos)
 {
-  // *** hard coded...
-  brics_actuator::JointPositions left_gripper_pos_command;
-  left_gripper_pos_command.positions.resize(1);
+    control_msgs::GripperCommand pos_command_msg;
+    pos_command_msg.position = pos/1000.0;
 
-  left_gripper_pos_command.positions[0].timeStamp = ros::Time::now();
-  left_gripper_pos_command.positions[0].joint_uri = "left_arm_top_finger_joint";
-  left_gripper_pos_command.positions[0].unit = "m";
-  left_gripper_pos_command.positions[0].value = pos/1000.0;
-
-  pg70_pos_pub.publish(left_gripper_pos_command);
-
+    pg70_pos_pub_.publish(pos_command_msg);
 }
 
-void QNode::closeGripper(double target_vel, double current_limit)
+void QNode::leftArmStatusCallback(const std_msgs::Bool::ConstPtr &msg)
 {
-	dumbo_srvs::ClosePG70Gripper gripper_close_srv;
-	gripper_close_srv.request.target_vel = target_vel;
-	gripper_close_srv.request.current_limit = current_limit;
+    if(msg->data)
+    {
+        emit leftArmConnected();
+    }
 
-	if(pg70_close_srv_client.call(gripper_close_srv))
-	{
-		if(gripper_close_srv.response.success)
-		{
-			ROS_INFO("Closing PG70 gripper");
-		}
-
-		else
-		{
-			ROS_ERROR("Couldn't close PG70 gripper.");
-		}
-	}
-
-	else
-	{
-		ROS_ERROR("Couldn't close PG70 gripper.");
-	}
-
+    else
+    {
+        emit leftArmDisconnected();
+    }
 }
 
-
-void QNode::connectFT()
+void QNode::rightArmStatusCallback(const std_msgs::Bool::ConstPtr &msg)
 {
+    if(msg->data)
+    {
+        emit rightArmConnected();
+    }
 
-    cob_srvs::Trigger left_arm_ft_connect_srv;
-    while(!left_arm_ft_connectsrv_client.exists())
-	{
-        ROS_INFO("Waiting for left arm F/T connect service.");
-		ros::Duration(1).sleep();
-	}
-    if(left_arm_ft_connectsrv_client.call(left_arm_ft_connect_srv))
-	{
-        if(left_arm_ft_connect_srv.response.success.data)
-		{
-            ROS_INFO("Successfully connected to left arm F/T sensor...");
-            emit left_ft_connected();
-		}
-		else
-		{
-            ROS_ERROR("Error connecting to left arm F/T sensor");
-		}
-	}
-
-	else
-	{
-        ROS_ERROR("Failed to call left arm F/T sensor connect service");
-	}
-
-    cob_srvs::Trigger right_arm_ft_connect_srv;
-    while(!right_arm_ft_connectsrv_client.exists())
-	{
-        ROS_INFO("Waiting for right arm F/T connect service.");
-		ros::Duration(1).sleep();
-	}
-    if(right_arm_ft_connectsrv_client.call(right_arm_ft_connect_srv))
-	{
-        if(right_arm_ft_connect_srv.response.success.data)
-		{
-            ROS_INFO("Successfully connected to right arm F/T sensor...");
-            emit right_ft_connected();
-		}
-		else
-		{
-            ROS_ERROR("Error connecting to right arm F/T sensor");
-		}
-	}
-
-	else
-	{
-        ROS_ERROR("Failed to call right arm F/T sensor connect service");
-	}
-
+    else
+    {
+        emit rightArmDisconnected();
+    }
 }
+
+void QNode::pg70StatusCallback(const std_msgs::Bool::ConstPtr &msg)
+{
+    if(msg->data)
+    {
+        emit pg70Connected();
+    }
+
+    else
+    {
+        emit pg70Disconnected();
+    }
+}
+
+void QNode::leftArmFTSensorStatusCallback(const std_msgs::Bool::ConstPtr &msg)
+{
+    if(msg->data)
+    {
+        emit leftArmFTSensorConnected();
+    }
+
+    else
+    {
+        emit leftArmFTSensorDisconnected();
+    }
+}
+
+void QNode::rightArmFTSensorStatusCallback(const std_msgs::Bool::ConstPtr &msg)
+{
+    if(msg->data)
+    {
+        emit rightArmFTSensorConnected();
+    }
+
+    else
+    {
+        emit rightArmFTSensorDisconnected();
+    }
+}
+
